@@ -1,35 +1,93 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useEffect, useState } from "react";
+import "./App.css";
+import { db, auth } from "./firebase";
+import {
+  collection,
+  getDocs,
+  doc,
+  deleteDoc,
+  addDoc,
+} from "firebase/firestore";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [lists, setLists] = useState([]);
+  const [isPending, setIspending] = useState(true);
+  const colRef = collection(db, "lists");
+
+  const updateState = () => {
+    setIspending(true);
+    getDocs(colRef).then((snapshot) => {
+      let newList = [];
+      snapshot.forEach((doc) => {
+        newList.push({ ...doc.data(), id: doc.id });
+      });
+      setLists(newList);
+      setIspending(false);
+    });
+  };
+
+  useEffect(() => {
+    console.log(lists);
+  }, [lists]);
+
+  useEffect(updateState, []);
+
+  const deleteDocHandler = (index) => {
+    setIspending(true);
+    const docRef = doc(db, "lists", lists[index].id);
+    deleteDoc(docRef).then(() => {
+      console.log("deleted");
+      lists.splice(index, 1);
+      setLists([...lists]);
+      setIspending(false);
+    });
+  };
+  const addDocHandler = (e) => {
+    setIspending(true);
+    e.preventDefault();
+    const title = e.currentTarget.title.value;
+    const description = e.currentTarget.description.value;
+    if (!title || !description) return;
+    addDoc(colRef, {
+      title: title,
+      description: description,
+    }).then(() => {
+      updateState();
+      setIspending(false);
+    });
+    e.currentTarget.reset();
+  };
 
   return (
-    <>
+    <div>
       <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+        <h1>List</h1>
+        {isPending && <span>Loading...</span>}
+        <div>
+          <div className="tools">
+            <form action="" onSubmit={addDocHandler}>
+              <input type="text" name="title" placeholder="title" />
+              <input type="text" name="description" placeholder="description" />
+              <button type="submit">Add doc</button>
+            </form>
+          </div>
+          <ul>
+            {lists.map((elem, index) => {
+              return (
+                <li key={index + 1}>
+                  <h2>{elem.title}</h2>
+                  <p>{elem.description}</p>
+                  <button onClick={() => deleteDocHandler(index)}>
+                    delete doc
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    </div>
+  );
 }
 
-export default App
+export default App;
