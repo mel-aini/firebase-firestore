@@ -9,6 +9,7 @@ import {
   addDoc,
   getDoc,
   updateDoc,
+  onSnapshot,
 } from "firebase/firestore";
 import { signOut, onAuthStateChanged } from "firebase/auth";
 
@@ -20,82 +21,57 @@ function App() {
   const [isPending, setIspending] = useState(true);
   const [wantSignup, setWantSignup] = useState(false);
   const [wantLogin, setWantLogin] = useState(false);
-  const colRef = collection(db, "lists");
   const usersColRef = collection(db, "users");
   const [isLogin, setIsLogin] = useState(false);
-  // const loginModal = useRef(null);
+  const userId = useRef(null);
   useEffect(() => {
-    if (auth.currentUser) {
-      updateState();
-      onAuthStateChanged(auth, (user) => {
-        user ? setIsLogin(true) : setIsLogin(false);
-        console.log(user);
-      });
-    } else setIspending(false);
-  }, []);
-
-  const updateState = () => {
-    const docRef = doc(db, "users", auth.currentUser.uid);
-    setIspending(true);
-    getDoc(docRef).then((snapshot) => {
-      console.log(snapshot.data());
-      const newBooks = snapshot.data().books;
-      setLists(newBooks);
-      setIspending(false);
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setIsLogin(true);
+        userId.current = user.uid;
+        const docRef = doc(db, "users", userId.current);
+        onSnapshot(docRef, (snapshot) => {
+          console.log(snapshot.data());
+          const newBooks = snapshot.data().books;
+          setLists(newBooks);
+          setIspending(false);
+        });
+      } else {
+        setIsLogin(false);
+        userId.current = null;
+        setIspending(false);
+      }
     });
-  };
-
-  useEffect(() => {
-    console.log(auth);
-  }, [lists]);
+  }, []);
 
   const deleteDocHandler = (index) => {
     setIspending(true);
-    const docRef = doc(db, "users", auth.currentUser.uid);
-    getDoc(docRef).then((snapshot) => {
-      let books = snapshot.data().books;
-      books.splice(index, 1);
-      updateDoc(docRef, { ...books }).then(() => {
-        setLists(books);
-        setIspending(false);
-      });
+    if (!userId.current) return;
+    const docRef = doc(db, "users", userId.current);
+    lists.splice(index, 1);
+    updateDoc(docRef, { books: [...lists] }).then(() => {
+      console.log("book deleted");
     });
-    // deleteDoc(docRef).then(() => {
-    //   console.log("deleted");
-    //   lists.splice(index, 1);
-    //   setLists([...lists]);
-    //   setIspending(false);
-    // });
   };
+
   const addDocHandler = (e) => {
     e.preventDefault();
+    setIspending(true);
     const title = e.currentTarget.title.value;
     const description = e.currentTarget.description.value;
-    if (!title || !description) return;
-    setIspending(true);
-    const docRef = doc(db, "users", auth.currentUser.uid);
+    if (!title || !description || !userId.current) return;
+    const books = {
+      books: [...lists, { title: title, description: description }],
+    };
     // get data
-    getDoc(docRef)
-      .then((snapshot) => {
-        console.log(snapshot.data());
-        const books = {
-          books: [
-            ...snapshot.data().books,
-            { title: title, description: description },
-          ],
-        };
-        updateDoc(docRef, books).then(() => {
-          console.log("book added");
-          updateState();
-        });
-        setIspending(false);
+    const docRef = doc(db, "users", userId.current);
+    updateDoc(docRef, books)
+      .then(() => {
+        console.log("book added");
       })
-      .catch((err) => console.log(err.message));
-
-    // addDoc(colRef, book).then(() => {
-    // updateState();
-    //   setIspending(false);
-    // });
+      .catch((err) => {
+        console.log(err.message);
+      });
     e.currentTarget.reset();
   };
 
@@ -103,6 +79,7 @@ function App() {
     signOut(auth).then(() => {
       console.log("signed out");
       setIsLogin(false);
+      setLists([]);
     });
   };
 

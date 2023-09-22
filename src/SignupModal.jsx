@@ -22,7 +22,11 @@ function SignupModal({ auth, setWantSignup }) {
     createUserWithEmailAndPassword(auth, email, password)
       .then((cred) => {
         formRef.current.reset();
-        const data = { username: username, email: cred.user.email, books: [] };
+        const data = {
+          username: username,
+          email: cred.user.email,
+          books: [],
+        };
         //load user data
         setDoc(doc(usersColRef, cred.user.uid), data).then(() => {
           setWantSignup(false);
