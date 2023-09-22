@@ -8,17 +8,25 @@ import {
   deleteDoc,
   addDoc,
 } from "firebase/firestore";
+import { signOut, onAuthStateChanged } from "firebase/auth";
+
 import SignupModal from "./SignupModal";
 import LoginModal from "./LoginModal";
 
 function App() {
   const [lists, setLists] = useState([]);
   const [isPending, setIspending] = useState(true);
-  const colRef = collection(db, "lists");
   const [wantSignup, setWantSignup] = useState(false);
   const [wantLogin, setWantLogin] = useState(false);
+  const colRef = collection(db, "lists");
+  const [isLogin, setIsLogin] = useState(false);
   // const loginModal = useRef(null);
-
+  useEffect(() => {
+    onAuthStateChanged(auth, (user) => {
+      user ? setIsLogin(true) : setIsLogin(false);
+      console.log(user);
+    });
+  });
   const updateState = () => {
     setIspending(true);
     getDocs(colRef).then((snapshot) => {
@@ -63,20 +71,33 @@ function App() {
     e.currentTarget.reset();
   };
 
+  const logoutHandler = () => {
+    signOut(auth).then(() => {
+      console.log("signed out");
+      setIsLogin(false);
+    });
+  };
+
   return (
     <div className="w-[80%] mx-auto text-light">
       <header className="flex justify-between py-5">
         <h1>Header</h1>
         <div className="flex justify-between gap-3">
-          <button onClick={() => setWantLogin(true)}>
-            <b>Login</b>
-          </button>
-          <button onClick={() => setWantSignup(true)}>
-            <b>Sign Up</b>
-          </button>
-          {/* <button>
-            <b>Logout</b>
-          </button> */}
+          {!isLogin && (
+            <>
+              <button onClick={() => setWantLogin(true)}>
+                <b>Login</b>
+              </button>
+              <button onClick={() => setWantSignup(true)}>
+                <b>Sign Up</b>
+              </button>
+            </>
+          )}
+          {isLogin && (
+            <button onClick={logoutHandler}>
+              <b>Logout</b>
+            </button>
+          )}
         </div>
       </header>
       <div className="flex flex-col gap-5">
@@ -129,8 +150,14 @@ function App() {
           })}
         </ul>
       </div>
-      {wantSignup && <SignupModal setWantSignup={setWantSignup} />}
-      {wantLogin && <LoginModal setWantLogin={setWantLogin} />}
+      {wantSignup && <SignupModal setWantSignup={setWantSignup} auth={auth} />}
+      {wantLogin && (
+        <LoginModal
+          auth={auth}
+          setWantLogin={setWantLogin}
+          setIsLogin={setIsLogin}
+        />
+      )}
     </div>
   );
 }

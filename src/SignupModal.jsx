@@ -1,12 +1,30 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 
-function SignupModal({ setWantSignup }) {
+function SignupModal({ auth, setWantSignup }) {
+  const formRef = useRef(null);
+  const createUser = (e) => {
+    e.preventDefault();
+    createUserWithEmailAndPassword(
+      auth,
+      e.currentTarget.email.value,
+      e.currentTarget.password.value
+    )
+      .then((cred) => {
+        //   console.log(cred.user.uid);
+        formRef.current.reset();
+        setWantSignup(false);
+      })
+      .catch((err) => console.log(err.message));
+  };
   return (
     <div className="modal fixed w-[100vw] h-[100vh] left-0 top-0">
       <div className="wrapper w-full h-full relative flex flex-col justify-center items-center">
         <form
           action=""
           className="z-20 flex flex-col justify-between items-center w-[90%] max-w-[320px] h-[400px] bg-light text-dark py-5 px-7"
+          onSubmit={createUser}
+          ref={formRef}
         >
           <h1 className="text-3xl font-medium">Sign up</h1>
           <hr className="border-dark w-full" />
@@ -36,7 +54,10 @@ function SignupModal({ setWantSignup }) {
           </button>
         </form>
         <div
-          onClick={() => setWantSignup(false)}
+          onClick={() => {
+            setWantSignup(false);
+            formRef.current.reset();
+          }}
           className="overlay z-10 absolute left-0 top-0 bg-dark w-full h-full opacity-50"
         ></div>
       </div>

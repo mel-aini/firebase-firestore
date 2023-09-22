@@ -1,8 +1,21 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
+import { signInWithEmailAndPassword } from "firebase/auth";
 
-function LoginModal({ setWantLogin }) {
+function LoginModal({ auth, setWantLogin, setIsLogin }) {
   const loginModal = useRef(null);
-
+  const loginHandler = (e) => {
+    e.preventDefault();
+    signInWithEmailAndPassword(
+      auth,
+      e.currentTarget.email.value,
+      e.currentTarget.password.value
+    )
+      .then(() => {
+        setWantLogin(false);
+        setIsLogin(true);
+      })
+      .catch((err) => console.log(err.message));
+  };
   return (
     <div
       ref={loginModal}
@@ -12,15 +25,16 @@ function LoginModal({ setWantLogin }) {
         <form
           action=""
           className="z-20 flex flex-col justify-between items-center w-[90%] max-w-[320px] h-[350px] bg-light text-dark py-5 px-7"
+          onSubmit={loginHandler}
         >
           <h1 className="text-3xl font-medium">Login</h1>
           <hr className="border-dark w-full" />
           <input
             className="h-[40px] w-full outline-none px-3 bg-[transparent] border border-[transparent] border-b-dark placeholder:text-dark placeholder:opacity-50"
             type="text"
-            name="username"
-            id="username"
-            placeholder="username"
+            name="email"
+            id="email"
+            placeholder="email"
           />
           <input
             className="h-[40px] w-full outline-none px-3 bg-[transparent] border border-[transparent] border-b-dark placeholder:text-dark placeholder:opacity-50"
