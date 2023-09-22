@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import "./App.css";
+import "./index.css";
 import { db, auth } from "./firebase";
 import {
   collection,
@@ -43,11 +43,11 @@ function App() {
     });
   };
   const addDocHandler = (e) => {
-    setIspending(true);
     e.preventDefault();
     const title = e.currentTarget.title.value;
     const description = e.currentTarget.description.value;
     if (!title || !description) return;
+    setIspending(true);
     addDoc(colRef, {
       title: title,
       description: description,
@@ -59,32 +59,68 @@ function App() {
   };
 
   return (
-    <div>
-      <div>
-        <h1>List</h1>
-        {isPending && <span>Loading...</span>}
-        <div>
-          <div className="tools">
-            <form action="" onSubmit={addDocHandler}>
-              <input type="text" name="title" placeholder="title" />
-              <input type="text" name="description" placeholder="description" />
-              <button type="submit">Add doc</button>
-            </form>
-          </div>
-          <ul>
-            {lists.map((elem, index) => {
-              return (
-                <li key={index + 1}>
-                  <h2>{elem.title}</h2>
-                  <p>{elem.description}</p>
-                  <button onClick={() => deleteDocHandler(index)}>
-                    delete doc
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
+    <div className="w-[80%] mx-auto text-light">
+      <header className="flex justify-between py-5">
+        <h1>Header</h1>
+        <div className="flex justify-between gap-3">
+          <button>
+            <b>Login</b>
+          </button>
+          <button>
+            <b>Sign Up</b>
+          </button>
+          {/* <button>
+            <b>Logout</b>
+          </button> */}
         </div>
+      </header>
+      <div className="flex flex-col gap-5">
+        <h1 className="text-xl">List of docs</h1>
+        <form
+          action=""
+          onSubmit={addDocHandler}
+          className="flex items-center justify-start gap-5"
+        >
+          <input
+            className="h-[40px] border border-solid border-[transparent] border-b-light outline-none px-2 bg-dark"
+            type="text"
+            name="title"
+            placeholder="title"
+          />
+          <input
+            className="h-[40px] border border-solid border-[transparent] border-b-light outline-none px-2 bg-dark"
+            type="text"
+            name="description"
+            placeholder="description"
+          />
+          <button
+            className="h-[40px] w-[200px] border-none outline-none px-2 bg-semidark"
+            type="submit"
+          >
+            Add doc
+          </button>
+        </form>
+        {isPending && <span>Loading...</span>}
+        <ul className="grid grid-cols-3 gap-3">
+          {lists.map((elem, index) => {
+            return (
+              <li
+                className="bg-semidark p-5 flex flex-col gap-3"
+                key={index + 1}
+              >
+                <h2>{elem.title}</h2>
+                <hr />
+                <p>{elem.description}</p>
+                <button
+                  className="text-right"
+                  onClick={() => deleteDocHandler(index)}
+                >
+                  delete doc
+                </button>
+              </li>
+            );
+          })}
+        </ul>
       </div>
     </div>
   );
