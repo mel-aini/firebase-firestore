@@ -7,6 +7,8 @@ import {
   doc,
   deleteDoc,
   addDoc,
+  getDoc,
+  updateDoc,
 } from "firebase/firestore";
 import { signOut, onAuthStateChanged } from "firebase/auth";
 
@@ -19,41 +21,51 @@ function App() {
   const [wantSignup, setWantSignup] = useState(false);
   const [wantLogin, setWantLogin] = useState(false);
   const colRef = collection(db, "lists");
+  const usersColRef = collection(db, "users");
   const [isLogin, setIsLogin] = useState(false);
   // const loginModal = useRef(null);
   useEffect(() => {
-    onAuthStateChanged(auth, (user) => {
-      user ? setIsLogin(true) : setIsLogin(false);
-      console.log(user);
-    });
-  });
-  const updateState = () => {
-    setIspending(true);
-    getDocs(colRef).then((snapshot) => {
-      let newList = [];
-      snapshot.forEach((doc) => {
-        newList.push({ ...doc.data(), id: doc.id });
+    if (auth.currentUser) {
+      updateState();
+      onAuthStateChanged(auth, (user) => {
+        user ? setIsLogin(true) : setIsLogin(false);
+        console.log(user);
       });
-      setLists(newList);
+    } else setIspending(false);
+  }, []);
+
+  const updateState = () => {
+    const docRef = doc(db, "users", auth.currentUser.uid);
+    setIspending(true);
+    getDoc(docRef).then((snapshot) => {
+      console.log(snapshot.data());
+      const newBooks = snapshot.data().books;
+      setLists(newBooks);
       setIspending(false);
     });
   };
 
   useEffect(() => {
-    console.log(lists);
+    console.log(auth);
   }, [lists]);
-
-  useEffect(updateState, []);
 
   const deleteDocHandler = (index) => {
     setIspending(true);
-    const docRef = doc(db, "lists", lists[index].id);
-    deleteDoc(docRef).then(() => {
-      console.log("deleted");
-      lists.splice(index, 1);
-      setLists([...lists]);
-      setIspending(false);
+    const docRef = doc(db, "users", auth.currentUser.uid);
+    getDoc(docRef).then((snapshot) => {
+      let books = snapshot.data().books;
+      books.splice(index, 1);
+      updateDoc(docRef, { ...books }).then(() => {
+        setLists(books);
+        setIspending(false);
+      });
     });
+    // deleteDoc(docRef).then(() => {
+    //   console.log("deleted");
+    //   lists.splice(index, 1);
+    //   setLists([...lists]);
+    //   setIspending(false);
+    // });
   };
   const addDocHandler = (e) => {
     e.preventDefault();
@@ -61,13 +73,29 @@ function App() {
     const description = e.currentTarget.description.value;
     if (!title || !description) return;
     setIspending(true);
-    addDoc(colRef, {
-      title: title,
-      description: description,
-    }).then(() => {
-      updateState();
-      setIspending(false);
-    });
+    const docRef = doc(db, "users", auth.currentUser.uid);
+    // get data
+    getDoc(docRef)
+      .then((snapshot) => {
+        console.log(snapshot.data());
+        const books = {
+          books: [
+            ...snapshot.data().books,
+            { title: title, description: description },
+          ],
+        };
+        updateDoc(docRef, books).then(() => {
+          console.log("book added");
+          updateState();
+        });
+        setIspending(false);
+      })
+      .catch((err) => console.log(err.message));
+
+    // addDoc(colRef, book).then(() => {
+    // updateState();
+    //   setIspending(false);
+    // });
     e.currentTarget.reset();
   };
 
@@ -102,32 +130,35 @@ function App() {
       </header>
       <div className="flex flex-col gap-5">
         <h1 className="text-xl">List of docs</h1>
-        <form
-          action=""
-          onSubmit={addDocHandler}
-          className="flex items-end justify-between gap-5"
-        >
-          <div className="flex gap-5">
-            <input
-              className="h-[40px] border border-solid border-[transparent] border-b-light outline-none px-2 bg-dark"
-              type="text"
-              name="title"
-              placeholder="title"
-            />
-            <input
-              className="h-[40px] border border-solid border-[transparent] border-b-light outline-none px-2 bg-dark"
-              type="text"
-              name="description"
-              placeholder="description"
-            />
-          </div>
-          <button
-            className="h-[40px] w-[150px] border-none outline-none px-2 bg-semidark font-medium"
-            type="submit"
+        {!isLogin && <p>login to see books</p>}
+        {isLogin && (
+          <form
+            action=""
+            onSubmit={addDocHandler}
+            className="flex items-end justify-between gap-5"
           >
-            Add doc
-          </button>
-        </form>
+            <div className="flex gap-5">
+              <input
+                className="h-[40px] border border-solid border-[transparent] border-b-light outline-none px-2 bg-dark"
+                type="text"
+                name="title"
+                placeholder="title"
+              />
+              <input
+                className="h-[40px] border border-solid border-[transparent] border-b-light outline-none px-2 bg-dark"
+                type="text"
+                name="description"
+                placeholder="description"
+              />
+            </div>
+            <button
+              className="h-[40px] w-[150px] border-none outline-none px-2 bg-semidark font-medium"
+              type="submit"
+            >
+              Add doc
+            </button>
+          </form>
+        )}
         {isPending && <span>Loading...</span>}
         <ul className="grid grid-cols-3 gap-3">
           {lists.map((elem, index) => {

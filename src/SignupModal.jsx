@@ -1,19 +1,32 @@
 import { useRef } from "react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
+import { db } from "./firebase";
+import {
+  collection,
+  getDocs,
+  doc,
+  setDoc,
+  deleteDoc,
+  addDoc,
+} from "firebase/firestore";
 
 function SignupModal({ auth, setWantSignup }) {
   const formRef = useRef(null);
+  const usersColRef = collection(db, "users");
+
   const createUser = (e) => {
+    const username = e.currentTarget.username.value;
+    const email = e.currentTarget.email.value;
+    const password = e.currentTarget.password.value;
     e.preventDefault();
-    createUserWithEmailAndPassword(
-      auth,
-      e.currentTarget.email.value,
-      e.currentTarget.password.value
-    )
+    createUserWithEmailAndPassword(auth, email, password)
       .then((cred) => {
-        //   console.log(cred.user.uid);
         formRef.current.reset();
-        setWantSignup(false);
+        const data = { username: username, email: cred.user.email, books: [] };
+        //load user data
+        setDoc(doc(usersColRef, cred.user.uid), data).then(() => {
+          setWantSignup(false);
+        });
       })
       .catch((err) => console.log(err.message));
   };
