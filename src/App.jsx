@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./index.css";
 import { db, auth } from "./firebase";
 import {
@@ -8,11 +8,16 @@ import {
   deleteDoc,
   addDoc,
 } from "firebase/firestore";
+import SignupModal from "./SignupModal";
+import LoginModal from "./LoginModal";
 
 function App() {
   const [lists, setLists] = useState([]);
   const [isPending, setIspending] = useState(true);
   const colRef = collection(db, "lists");
+  const [wantSignup, setWantSignup] = useState(false);
+  const [wantLogin, setWantLogin] = useState(false);
+  // const loginModal = useRef(null);
 
   const updateState = () => {
     setIspending(true);
@@ -63,10 +68,10 @@ function App() {
       <header className="flex justify-between py-5">
         <h1>Header</h1>
         <div className="flex justify-between gap-3">
-          <button>
+          <button onClick={() => setWantLogin(true)}>
             <b>Login</b>
           </button>
-          <button>
+          <button onClick={() => setWantSignup(true)}>
             <b>Sign Up</b>
           </button>
           {/* <button>
@@ -79,22 +84,24 @@ function App() {
         <form
           action=""
           onSubmit={addDocHandler}
-          className="flex items-center justify-start gap-5"
+          className="flex items-end justify-between gap-5"
         >
-          <input
-            className="h-[40px] border border-solid border-[transparent] border-b-light outline-none px-2 bg-dark"
-            type="text"
-            name="title"
-            placeholder="title"
-          />
-          <input
-            className="h-[40px] border border-solid border-[transparent] border-b-light outline-none px-2 bg-dark"
-            type="text"
-            name="description"
-            placeholder="description"
-          />
+          <div className="flex gap-5">
+            <input
+              className="h-[40px] border border-solid border-[transparent] border-b-light outline-none px-2 bg-dark"
+              type="text"
+              name="title"
+              placeholder="title"
+            />
+            <input
+              className="h-[40px] border border-solid border-[transparent] border-b-light outline-none px-2 bg-dark"
+              type="text"
+              name="description"
+              placeholder="description"
+            />
+          </div>
           <button
-            className="h-[40px] w-[200px] border-none outline-none px-2 bg-semidark"
+            className="h-[40px] w-[150px] border-none outline-none px-2 bg-semidark font-medium"
             type="submit"
           >
             Add doc
@@ -122,6 +129,8 @@ function App() {
           })}
         </ul>
       </div>
+      {wantSignup && <SignupModal setWantSignup={setWantSignup} />}
+      {wantLogin && <LoginModal setWantLogin={setWantLogin} />}
     </div>
   );
 }
