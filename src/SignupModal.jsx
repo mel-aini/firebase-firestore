@@ -1,14 +1,7 @@
 import { useRef } from "react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { db } from "./firebase";
-import {
-  collection,
-  getDocs,
-  doc,
-  setDoc,
-  deleteDoc,
-  addDoc,
-} from "firebase/firestore";
+import { collection, doc, setDoc } from "firebase/firestore";
 
 function SignupModal({ auth, setWantSignup }) {
   const formRef = useRef(null);
@@ -22,12 +15,14 @@ function SignupModal({ auth, setWantSignup }) {
     createUserWithEmailAndPassword(auth, email, password)
       .then((cred) => {
         formRef.current.reset();
+        //load user data
         const data = {
           username: username,
           email: cred.user.email,
+          profileImage: null,
+          bio: null,
           books: [],
         };
-        //load user data
         setDoc(doc(usersColRef, cred.user.uid), data).then(() => {
           setWantSignup(false);
         });
