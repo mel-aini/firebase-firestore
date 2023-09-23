@@ -110,9 +110,9 @@ function App() {
             <form
               action=""
               onSubmit={addDocHandler}
-              className="flex items-end justify-between gap-5"
+              className="flex flex-col lg:flex-row lg:justify-between gap-5"
             >
-              <div className="flex gap-5">
+              <div className="flex flex-col lg:flex-row gap-5">
                 <input
                   className="h-[40px] border border-solid border-[transparent] border-b-light outline-none px-2 bg-dark"
                   type="text"
@@ -127,7 +127,7 @@ function App() {
                 />
               </div>
               <button
-                className="h-[40px] w-[150px] border-none outline-none px-2 bg-semidark font-medium"
+                className="h-[40px] w-full lg:w-[150px] border-none outline-none px-2 bg-semidark font-medium"
                 type="submit"
               >
                 Add doc
@@ -135,7 +135,7 @@ function App() {
             </form>
           )}
           {isPending && <span>Loading...</span>}
-          <ul className="grid grid-cols-3 gap-3">
+          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-[100px]">
             {books.map((elem, index) => {
               return (
                 <li

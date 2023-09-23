@@ -53,11 +53,11 @@ function Profile() {
       .catch((err) => console.log(err.message));
   };
   return (
-    <div className="flex justify-start gap-10 items-center">
+    <div className="flex flex-col sm:flex-row justify-start gap-10 items-center">
       <div
         onMouseEnter={() => setShowFileUpload(true)}
         onMouseLeave={() => setShowFileUpload(false)}
-        className="flex-[1_0_80px] h-[80px] border-2 border-light rounded-full bg-cover relative"
+        className="flex-[1_0_80px] w-[80px] h-[80px] border-2 border-light rounded-full bg-cover relative"
         style={{ backgroundImage: `url(${profile})` }}
       >
         {showFileUpload && (
@@ -70,9 +70,9 @@ function Profile() {
           />
         )}
       </div>
-      <div>
-        <h1>{username}</h1>
-        <p className="mt-[10px]">
+      <div className="flex flex-col items-center sm:items-start gap-5">
+        <h1 className="font-bold text-between">{username}</h1>
+        <p>
           Lorem ipsum dolor sit amet consectetur adipisicing elit. Ullam odio
           minima aliquam aut amet quidem quam, iusto praesentium voluptas
           tempora vero non sed, vitae dolorum recusandae quos consequuntur
